@@ -75,6 +75,12 @@ const remarkGitbook: Plugin<[RemarkGitbookOptions?], Root> = function (
     // Wrap the existing parser to preprocess GitBook syntax
     // before the Markdown AST is built.
     this.parser = (doc, file) => {
+      // Skip .mdx files — they contain valid JSX that should not be transformed.
+      // GitBook syntax only appears in .md files.
+      const filePath = typeof file === "string" ? "" : file.path || "";
+      if (filePath.endsWith(".mdx")) {
+        return originalParser(String(doc), file);
+      }
       const transformed = preprocess(String(doc), opts);
       return originalParser(transformed, file);
     };
