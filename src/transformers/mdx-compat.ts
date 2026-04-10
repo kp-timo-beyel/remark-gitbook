@@ -8,8 +8,12 @@
  *    `{% swagger %}`, etc. that have no Docusaurus equivalent
  */
 
-// OpenAPI operation tags → links to generated API pages
-const OPENAPI_OPERATION_RE =
+// OpenAPI operation blocks → links to generated API pages
+// Matches the full block: {% openapi-operation ... %} ... {% endopenapi-operation %}
+const OPENAPI_OPERATION_BLOCK_RE =
+  /{% openapi-operation\s+spec="[^"]*"\s+path="([^"]*)"\s+method="([^"]*)"\s*%}[\s\S]*?{% endopenapi-operation %}/g;
+// Also match standalone (without end tag)
+const OPENAPI_OPERATION_SINGLE_RE =
   /{% openapi-operation\s+spec="[^"]*"\s+path="([^"]*)"\s+method="([^"]*)"\s*%}/g;
 
 // OpenAPI schema tags → info note
@@ -27,13 +31,14 @@ const UNSUPPORTED_END_TAGS_RE =
 export function transformMdxCompat(markdown: string): string {
   let result = markdown;
 
-  // Replace OpenAPI operation tags with links to generated API docs
-  result = result.replace(OPENAPI_OPERATION_RE, (_match, path: string, method: string) => {
+  // Replace OpenAPI operation blocks (with end tag) with API reference links
+  function openapiReplace(_match: string, path: string, method: string): string {
     const methodUpper = method.toUpperCase();
-    // Clean path for display: /srs2/subscription_receipts → /srs2/subscription_receipts
-    const displayPath = path;
-    return `> **${methodUpper}** \`${displayPath}\`\n>\n> See the [API Reference](/api/) for request/response details.`;
-  });
+    return `> **${methodUpper}** \`${path}\`\n>\n> See the [API Reference](/api/) for request/response details.`;
+  }
+  result = result.replace(OPENAPI_OPERATION_BLOCK_RE, openapiReplace);
+  // Also handle standalone tags (without end tag)
+  result = result.replace(OPENAPI_OPERATION_SINGLE_RE, openapiReplace);
 
   // Strip OpenAPI schema blocks (with or without end tag)
   result = result.replace(OPENAPI_SCHEMAS_RE, "");
