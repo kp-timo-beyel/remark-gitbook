@@ -3,6 +3,10 @@ import type { Plugin, Processor } from "unified";
 import { transformHints } from "./transformers/hints.js";
 import { transformTabs } from "./transformers/tabs.js";
 import { transformStepper } from "./transformers/stepper.js";
+import { transformHtml } from "./transformers/html.js";
+import { transformCode } from "./transformers/code.js";
+import { transformMdxCompat } from "./transformers/mdx-compat.js";
+import { transformLinks } from "./transformers/links.js";
 
 export interface RemarkGitbookOptions {
   /**
@@ -12,6 +16,10 @@ export interface RemarkGitbookOptions {
   hints?: boolean;
   tabs?: boolean;
   stepper?: boolean;
+  code?: boolean;
+  html?: boolean;
+  links?: boolean;
+  mdxCompat?: boolean;
 }
 
 /**
@@ -22,12 +30,25 @@ export function preprocess(
   markdown: string,
   options: RemarkGitbookOptions = {}
 ): string {
-  const { hints = true, tabs = true, stepper = true } = options;
+  const {
+    hints = true,
+    tabs = true,
+    stepper = true,
+    code = true,
+    html = true,
+    links = true,
+    mdxCompat = true,
+  } = options;
 
   let result = markdown;
+  if (html) result = transformHtml(result);
+  if (code) result = transformCode(result);
   if (hints) result = transformHints(result);
   if (tabs) result = transformTabs(result);
   if (stepper) result = transformStepper(result);
+  if (links) result = transformLinks(result);
+  // mdxCompat must run last — it escapes braces that other transformers may have produced
+  if (mdxCompat) result = transformMdxCompat(result);
   return result;
 }
 
@@ -64,3 +85,7 @@ export default remarkGitbook;
 export { transformHints } from "./transformers/hints.js";
 export { transformTabs } from "./transformers/tabs.js";
 export { transformStepper } from "./transformers/stepper.js";
+export { transformHtml } from "./transformers/html.js";
+export { transformCode } from "./transformers/code.js";
+export { transformMdxCompat } from "./transformers/mdx-compat.js";
+export { transformLinks } from "./transformers/links.js";
