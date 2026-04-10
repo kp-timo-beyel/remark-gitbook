@@ -28,13 +28,39 @@ const UNSUPPORTED_BLOCK_TAGS_RE =
 const UNSUPPORTED_END_TAGS_RE =
   /{% (?:endswagger|endswagger-description|endswagger-parameter|endswagger-response|endembed|endfile)\s*%}/g;
 
+/**
+ * Resolve an OpenAPI path + method to the generated API doc page slug.
+ * Falls back to undefined if no match is found.
+ *
+ * The docusaurus-plugin-openapi-docs generates slugs by combining
+ * the operation's tag, method, and operationId. Since we don't have
+ * the full spec at transform time, we use a static lookup for known endpoints.
+ * Add entries here when new {% openapi-operation %} tags are used in GitBook docs.
+ */
+const API_SLUG_MAP: Record<string, string> = {
+  "post:/srs2/subscription_receipts": "post-subscription-receipt-subscription-receipts",
+  "post:/srs2/connection_token": "post-connection-token-connection-token",
+  "get:/srs2/s2s/entitlements/{customer_id}": "gets-2-s-subscription-entitlements",
+  "get:/ids2/locations": "get-instance-discovery-ids-locations",
+  "get:/ids2/locations/{location_id}/instances": "get-instance-discovery-ids-locations-instances",
+  "post:/iap": "send-iap-receipt",
+  "post:/subscription_features": "post-features-subscription-entitlements",
+};
+
+function resolveApiSlug(path: string, method: string): string | undefined {
+  return API_SLUG_MAP[`${method.toLowerCase()}:${path}`];
+}
+
 export function transformMdxCompat(markdown: string): string {
   let result = markdown;
 
-  // Replace OpenAPI operation blocks (with end tag) with API reference links
+  // Replace OpenAPI operation blocks with links to generated API endpoint pages
   function openapiReplace(_match: string, path: string, method: string): string {
     const methodUpper = method.toUpperCase();
-    return `> **${methodUpper}** \`${path}\`\n>\n> See the [API Reference](/api/) for request/response details.`;
+    const slug = resolveApiSlug(path, method);
+    const link = slug ? `/api/${slug}` : "/api/";
+    const linkText = slug ? "View full API details" : "API Reference";
+    return `> **${methodUpper}** \`${path}\`\n>\n> [${linkText}](${link})`;
   }
   result = result.replace(OPENAPI_OPERATION_BLOCK_RE, openapiReplace);
   // Also handle standalone tags (without end tag)
