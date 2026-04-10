@@ -1,0 +1,63 @@
+{
+  "name": "remark-gitbook",
+  "version": "0.1.0",
+  "description": "Remark plugin to convert GitBook-flavored Markdown (hints, tabs, stepper) to Docusaurus-compatible syntax",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "remark",
+    "remark-plugin",
+    "gitbook",
+    "docusaurus",
+    "markdown",
+    "mdx",
+    "admonitions",
+    "tabs",
+    "migration",
+    "unified"
+  ],
+  "author": "Timo Beyel",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kp-timo-beyel/remark-gitbook.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kp-timo-beyel/remark-gitbook/issues"
+  },
+  "peerDependencies": {
+    "unified": ">=10"
+  },
+  "dependencies": {
+    "mdast-util-from-markdown": "^2.0.0",
+    "unist-util-visit": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/mdast": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "remark": "^15.0.0",
+    "remark-html": "^16.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "typescript": "^5.7.0",
+    "unified": "^11.0.0",
+    "vitest": "^3.0.0"
+  }
+}
