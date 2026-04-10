@@ -8,14 +8,36 @@
  *    `{% swagger %}`, etc. that have no Docusaurus equivalent
  */
 
+// OpenAPI operation tags → links to generated API pages
+const OPENAPI_OPERATION_RE =
+  /{% openapi-operation\s+spec="[^"]*"\s+path="([^"]*)"\s+method="([^"]*)"\s*%}/g;
+
+// OpenAPI schema tags → info note
+const OPENAPI_SCHEMAS_RE =
+  /{% openapi-schemas\s[^%]*%}[\s\S]*?{% endopenapi-schemas %}/g;
+const OPENAPI_SCHEMAS_SINGLE_RE =
+  /{% openapi-schemas\s[^%]*%}/g;
+
 // GitBook tags with no Docusaurus equivalent — strip them entirely
 const UNSUPPORTED_BLOCK_TAGS_RE =
-  /{% (?:openapi-operation|swagger|swagger-description|swagger-parameter|swagger-response|embed|file)\s[^%]*%}/g;
+  /{% (?:swagger|swagger-description|swagger-parameter|swagger-response|embed|file)\s[^%]*%}/g;
 const UNSUPPORTED_END_TAGS_RE =
   /{% (?:endswagger|endswagger-description|endswagger-parameter|endswagger-response|endembed|endfile)\s*%}/g;
 
 export function transformMdxCompat(markdown: string): string {
   let result = markdown;
+
+  // Replace OpenAPI operation tags with links to generated API docs
+  result = result.replace(OPENAPI_OPERATION_RE, (_match, path: string, method: string) => {
+    const methodUpper = method.toUpperCase();
+    // Clean path for display: /srs2/subscription_receipts → /srs2/subscription_receipts
+    const displayPath = path;
+    return `> **${methodUpper}** \`${displayPath}\`\n>\n> See the [API Reference](/api/) for request/response details.`;
+  });
+
+  // Strip OpenAPI schema blocks (with or without end tag)
+  result = result.replace(OPENAPI_SCHEMAS_RE, "");
+  result = result.replace(OPENAPI_SCHEMAS_SINGLE_RE, "");
 
   // Strip unsupported GitBook block tags
   result = result.replace(UNSUPPORTED_BLOCK_TAGS_RE, "");
