@@ -29,8 +29,11 @@ const GITBOOK_STYLE_TO_DOCUSAURUS: Record<string, string> = {
   success: "tip",
 };
 
+// Match `{% hint style="..." %}` blocks. Allow extra attributes (e.g.
+// `icon="..."`) before or after `style=` — GitBook permits these in real
+// content even though the simplest form only has `style`.
 const HINT_BLOCK_RE =
-  /{% hint style="([^"]*)" %}\s*\n([\s\S]*?)\n\s*{% endhint %}/g;
+  /{% hint\s+[^%]*?style="([^"]*)"[^%]*%}\s*\n([\s\S]*?)\n\s*{% endhint %}/g;
 
 export function transformHints(markdown: string): string {
   return markdown.replace(HINT_BLOCK_RE, (_match, style: string, content: string) => {

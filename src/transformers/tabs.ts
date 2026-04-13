@@ -35,7 +35,12 @@
  * The import statement is added once at the top of the file if any tabs are found.
  */
 
-const TABS_BLOCK_RE = /{% tabs %}\s*\n([\s\S]*?)\n\s*{% endtabs %}/g;
+// Match an INNERMOST `{% tabs %}` block — one whose body contains no further
+// `{% tabs %}` opening. By processing innermost first and looping until no
+// matches remain, we correctly handle nested tabs without needing balanced
+// regex (which JS regex can't express).
+const TABS_BLOCK_RE =
+  /{% tabs %}\s*\n((?:(?!{% tabs %})[\s\S])*?)\n\s*{% endtabs %}/g;
 const TAB_RE = /{% tab title="([^"]*)" %}\s*\n([\s\S]*?)\n\s*{% endtab %}/g;
 
 const TABS_IMPORT =
@@ -82,11 +87,18 @@ function convertTabsBlock(tabsContent: string): string {
 
 export function transformTabs(markdown: string): string {
   let hasTabs = false;
-
-  const result = markdown.replace(TABS_BLOCK_RE, (_match, content: string) => {
-    hasTabs = true;
-    return convertTabsBlock(content);
-  });
+  let result = markdown;
+  // Loop because each pass only converts the innermost tabs (regex requires
+  // captured body to not contain another `{% tabs %}`). Outer tabs become
+  // matchable on the next pass once their inner blocks have been replaced.
+  let prev: string;
+  do {
+    prev = result;
+    result = result.replace(TABS_BLOCK_RE, (_match, content: string) => {
+      hasTabs = true;
+      return convertTabsBlock(content);
+    });
+  } while (result !== prev);
 
   if (!hasTabs) return result;
 

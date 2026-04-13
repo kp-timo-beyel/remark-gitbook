@@ -115,13 +115,16 @@ function escapeCurlyBraces(markdown: string): string {
       continue;
     }
 
-    // Escape braces outside of inline code spans
+    // Escape braces outside of inline code spans. Use HTML entities rather
+    // than backslash escapes (`\{`) because Docusaurus' MDX pipeline treats
+    // a backslash-escaped brace as still triggering expression parsing in
+    // some contexts (e.g. `\{n\}` inside a paragraph). HTML entities render
+    // identically and are safe everywhere in MDX.
     const parts = line.split(/(`[^`]*`)/);
     const escaped = parts.map((part) => {
       // Don't touch inline code
       if (part.startsWith("`") && part.endsWith("`")) return part;
-      // Escape lone braces
-      return part.replace(/\{/g, "\\{").replace(/\}/g, "\\}");
+      return part.replace(/\{/g, "&#123;").replace(/\}/g, "&#125;");
     });
 
     result.push(escaped.join(""));
